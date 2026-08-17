@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>T Finance</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- Floating controls: 2x2 grid — backup/budget on top, default/theme below -->
+<div class="floating-controls" id="floatingControls">
+  <div class="dropdown" id="backupPicker">
+    <button type="button" id="backupTrigger" class="btn-plain" aria-haspopup="true" aria-expanded="false" title="Back up or restore your data">
+      <span class="btn-plain-text-full">Backup</span>
+      <span aria-hidden="true">⇅</span>
+    </button>
+    <div class="theme-menu menu-list" id="backupMenu" hidden>
+      <button type="button" id="exportBackupBtn" class="btn-ghost">Export backup (.json)</button>
+      <button type="button" id="importBackupBtn" class="btn-ghost">Import backup…</button>
+      <input type="file" id="importFileInput" accept="application/json" hidden>
+    </div>
+  </div>
+  <button type="button" id="pageNavBtn" class="btn-plain" title="Go to the budget tracker">
+    <span class="btn-plain-text-full" id="pageNavLabel">Budget</span>
+    <span aria-hidden="true" id="pageNavIcon">→</span>
+  </button>
+  <button type="button" id="resetAll" class="btn-plain" title="Clear saved inputs and layout">
+    <span class="btn-plain-text-full">Default</span>
+    <span aria-hidden="true">↺</span>
+  </button>
+  <div class="dropdown" id="themePicker">
+    <button type="button" id="themeTrigger" class="theme-trigger" aria-haspopup="true" aria-expanded="false">
+      <span class="theme-trigger-hex" id="themeTriggerHex" aria-hidden="true"></span>
+      <span class="btn-plain-text-full" id="themeTriggerLabel">Light</span>
+    </button>
+    <div class="theme-menu" id="themeMenu" hidden></div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- Investment projection page (each widget is freeform draggable/resizable) -->
+  <div class="page" id="pageInvestment">
+  <div class="canvas" id="canvas">
+    <section class="widget" data-widget-id="capital">
+      <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Capital</h2></div>
+      <div class="widget-body">
+        <div class="field-row">
+          <label class="field">
+            <span>Starting capital</span>
+            <div class="input-prefix"><span>$</span><input type="number" id="startingCapital" value="10000" min="0" step="500"></div>
+          </label>
+          <label class="field">
+            <span>Projection length</span>
+            <div class="input-suffix"><input type="number" id="years" value="20" min="1" max="50" step="1"><span>years</span></div>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="reinvest-row">
+            <input type="checkbox" id="inflationToggle">
+            <span>Adjust for inflation</span>
+          </label>
+          <label class="field">
+            <span>Inflation rate</span>
+            <div class="input-suffix"><input type="number" id="inflationRate" value="3" min="0" max="20" step="0.1"><span>%/yr</span></div>
+          </label>
+        </div>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+
+    <section class="widget" data-widget-id="contribution">
+      <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Monthly contribution</h2></div>
+      <div class="widget-body">
+        <div id="phaseList" class="phase-list"></div>
+        <button type="button" id="addPhase" class="btn-ghost">+ Add a change</button>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+
+    <section class="widget" data-widget-id="allocation">
+      <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Portfolio allocation</h2></div>
+      <div class="widget-body">
+        <label class="reinvest-row">
+          <input type="checkbox" id="reinvestToggle" checked>
+          <span>Reinvest dividends (DRIP)</span>
+        </label>
+        <div id="etfList" class="etf-list"></div>
+        <div class="etf-add">
+          <input type="text" id="newTicker" placeholder="Add ticker (e.g. SPY)" maxlength="10" aria-label="New ETF or stock ticker">
+          <button type="button" id="addEtfBtn" class="btn-ghost">+ Add</button>
+        </div>
+        <div class="alloc-total" id="allocTotal"></div>
+        <p class="note">No live market data here — this runs fully offline with no network access. Return and dividend-yield assumptions come from a built-in table of long-run historical averages for common index funds, never from real-time prices.</p>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+
+    <section class="widget" data-widget-id="overview">
+      <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Overview</h2></div>
+      <div class="widget-body">
+        <div class="stat-row" id="statRow"></div>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+
+    <section class="widget" data-widget-id="chart">
+      <div class="widget-header">
+        <span class="grip" aria-hidden="true">⠿</span>
+        <h2>Growth over time</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="widget-body">
+        <div class="chart-wrap" id="chartWrap" tabindex="0" role="img" aria-label="Line and area chart of portfolio value over time">
+          <svg id="chartSvg" viewBox="0 0 760 380" preserveAspectRatio="none"></svg>
+          <div class="tooltip" id="tooltip" hidden></div>
+        </div>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+
+    <section class="widget" data-widget-id="table">
+      <div class="widget-header">
+        <span class="grip" aria-hidden="true">⠿</span>
+        <h2>Year-by-year</h2>
+        <button type="button" id="exportCsvBtn" class="btn-ghost btn-ghost-inline" title="Download this table as a CSV file">Export CSV</button>
+      </div>
+      <div class="widget-body">
+        <div class="table-scroll" id="tableScroll">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Contributed this year</th>
+                <th>Total contributed</th>
+                <th>Growth</th>
+                <th>Dividends</th>
+                <th>Total value</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <span class="resize-handle" aria-hidden="true"></span>
+    </section>
+  </div>
+  </div>
+
+  <!-- Budget tracker page (hidden by default; app.js's showPage() toggles pages) -->
+  <div class="page" id="pageBudget" hidden>
+    <div class="canvas" id="budgetCanvas">
+      <section class="widget" data-widget-id="overview">
+        <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Overview</h2></div>
+        <div class="widget-body">
+          <div class="stat-row" id="budgetStatRow"></div>
+        </div>
+        <span class="resize-handle" aria-hidden="true"></span>
+      </section>
+
+      <section class="widget" data-widget-id="breakdown">
+        <div class="widget-header">
+          <span class="grip" aria-hidden="true">⠿</span>
+          <h2>Where your income goes</h2>
+        </div>
+        <div class="widget-body">
+          <div class="leftover-color-control">
+            <span class="leftover-color-label">Choose Leftover Color</span>
+            <button type="button" class="li-color-trigger legend-color-trigger" id="leftoverColorTrigger" aria-label="Choose color for Leftover"></button>
+          </div>
+          <div class="chart-wrap" id="pieWrap" tabindex="0" role="img" aria-label="Pie chart of income split between expenses, savings and investing, and leftover">
+            <svg id="pieSvg" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="tooltip" id="pieTooltip" hidden></div>
+          </div>
+          <p class="note" id="breakdownNote"></p>
+          <div class="legend" id="budgetLegend"></div>
+        </div>
+        <span class="resize-handle" aria-hidden="true"></span>
+      </section>
+
+      <section class="widget" data-widget-id="income">
+        <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Income</h2></div>
+        <div class="widget-body">
+          <div class="field-row">
+            <label class="field">
+              <span>Take-home pay (per hour)</span>
+              <div class="input-prefix"><span>$</span><input type="number" id="hourlyRate" value="0" min="0" step="0.5"></div>
+            </label>
+            <label class="field">
+              <span>Hours worked / year</span>
+              <div class="input-suffix"><input type="number" id="hoursPerYear" value="0" min="0" step="10"><span>hrs</span></div>
+            </label>
+          </div>
+          <p class="note" id="hourlyIncomeReadout"></p>
+          <div id="incomeList" class="line-item-list"></div>
+          <button type="button" id="addIncome" class="btn-ghost">+ Add income</button>
+          <div class="alloc-total" id="incomeSubtotal"></div>
+        </div>
+        <span class="resize-handle" aria-hidden="true"></span>
+      </section>
+
+      <section class="widget" data-widget-id="expenses">
+        <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Expenses</h2></div>
+        <div class="widget-body">
+          <div id="expenseList" class="line-item-list"></div>
+          <button type="button" id="addExpense" class="btn-ghost">+ Add expense</button>
+          <div class="alloc-total" id="expenseSubtotal"></div>
+        </div>
+        <span class="resize-handle" aria-hidden="true"></span>
+      </section>
+
+      <section class="widget" data-widget-id="savings">
+        <div class="widget-header"><span class="grip" aria-hidden="true">⠿</span><h2>Savings &amp; investing</h2></div>
+        <div class="widget-body">
+          <div class="goal-row">
+            <label class="field goal-pct-field">
+              <span>Savings goal</span>
+              <div class="input-suffix"><input type="number" id="savingsGoalPct" value="20" min="0" max="100" step="1"><span>%</span></div>
+            </label>
+            <div class="stat-tile goal-tile" id="savingsGoalTile">
+              <p class="stat-label">Goal</p>
+              <p class="stat-value" id="savingsGoalValue"></p>
+              <p class="stat-sub" id="savingsGoalSub"></p>
+              <p class="stat-delta" id="savingsGoalDelta"></p>
+            </div>
+          </div>
+          <div id="savingsList" class="line-item-list"></div>
+          <button type="button" id="addSavings" class="btn-ghost">+ Add savings</button>
+          <div class="alloc-total" id="savingsSubtotal"></div>
+        </div>
+        <span class="resize-handle" aria-hidden="true"></span>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Shared color-picker popover, built once in app.js (see openHuePicker()) -->
+<div class="hue-picker-menu" id="huePickerMenu" hidden></div>
+
+<script src="app.js"></script>

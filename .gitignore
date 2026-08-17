@@ -1,0 +1,19 @@
+# Claude Code
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Node (only relevant if you use `npx serve` or similar locally)
+node_modules/
+npm-debug.log*
+
+# Logs
+*.log
