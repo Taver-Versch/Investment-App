@@ -1,3 +1,5 @@
+<img width="426" height="240" alt="financeApp" src="https://github.com/user-attachments/assets/aec2417b-231f-48fb-a6a8-b047e9bd9737" />
+
 # Investment & Budget Planner
 A small app that runs entirely in your browser (locally), no backend, no build step, no accounts.
 
