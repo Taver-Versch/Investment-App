@@ -42,9 +42,4 @@ It's fully static, so any static host works too!
 >Note: Changing the `<title>` line near the top of `index.html` changes the
 >name of the website in your browser tab.
 
->Also: some changes to this repo get shipped by a small autonomous multi-agent
->pipeline instead of by hand — an architect agent drafts a blueprint, an
->engineer agent implements it, a QA agent reviews the diff (retrying its own
->fixes if something's off), then a ship step commits, pushes, and opens the
->PR. It all runs under a separate bot GitHub account, so agent-driven
->commits/PRs are easy to tell apart from stuff I did myself.
+I used this project as a learning experience for Agentic Workflow. Some chenges to this repo get shipped by a small autonomous multi-agent pipeline. An architect agent drafts a blueprint, an engineer agent implements it, QA agent reviews and fixes. Automatically commits, pushes, and opens a PR all under this bot account.
