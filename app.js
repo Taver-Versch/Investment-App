@@ -36,7 +36,7 @@
 
   var BUDGET_WIDGET_DEFAULTS = {
     overview:  { x: 0,  y: 0,  w: 57, h: 18 },
-    breakdown: { x: 0,  y: 20, w: 57, h: 78 },
+    breakdown: { x: 0,  y: 20, w: 57, h: 52 },
     income:    { x: 59, y: 17, w: 41, h: 23 },
     expenses:  { x: 59, y: 42, w: 41, h: 28 },
     savings:   { x: 59, y: 72, w: 41, h: 26 }
@@ -44,7 +44,7 @@
 
   var BUDGET_WIDGET_MIN = {
     overview:  { w: 280, h: 150 },
-    breakdown: { w: 320, h: 300 },
+    breakdown: { w: 300, h: 260 },
     income:    { w: 300, h: 230 },
     expenses:  { w: 300, h: 220 },
     savings:   { w: 300, h: 220 }

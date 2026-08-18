@@ -655,7 +655,7 @@
   .widget[data-widget-id="income"]       { min-width: 300px; min-height: 230px; }
   .widget[data-widget-id="expenses"]     { min-width: 300px; min-height: 220px; }
   .widget[data-widget-id="savings"]      { min-width: 300px; min-height: 220px; }
-  .widget[data-widget-id="breakdown"]    { min-width: 320px; min-height: 300px; }
+  .widget[data-widget-id="breakdown"]    { min-width: 300px; min-height: 260px; }
 
   .widget-header {
     display: flex;
@@ -1160,6 +1160,7 @@
 
   .chart-wrap { position: relative; width: 100%; flex: 1 1 auto; min-height: 0; }
   #chartSvg { width: 100%; height: 100%; display: block; touch-action: none; }
+  #pieSvg { width: 100%; height: 100%; display: block; }
   .tick-label {
     font-family: var(--font-mono);
     font-size: 10.5px;
